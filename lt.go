@@ -1,24 +1,40 @@
 package main
+
 import (
-	"fmt"
+    "bytes"
+    "fmt"
+    "log"
+    "os"
 
-	gosyslog "log/syslog"
-
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
-	"github.com/go-kit/log/syslog"
+    "log/slog"
 )
 
 func main() {
-	// Normal syslog writer
-	w, err := gosyslog.New(gosyslog.LOG_INFO, "experiment")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 
-	// syslog logger with logfmt formatting
-	logger := syslog.NewSyslogLogger(w, log.NewLogfmtLogger)
-	logger.Log("msg", "info because of default")
-	logger.Log(level.Key(), level.DebugValue(), "msg", "debug because of explicit level")
+    log.Println("standard logger")
+
+    log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+    log.Println("with micro")
+
+    log.SetFlags(log.LstdFlags | log.Lshortfile)
+    log.Println("with file/line")
+
+    mylog := log.New(os.Stdout, "my:", log.LstdFlags)
+    mylog.Println("from mylog")
+
+    mylog.SetPrefix("ohmy:")
+    mylog.Println("from mylog")
+
+    var buf bytes.Buffer
+    buflog := log.New(&buf, "buf:", log.LstdFlags)
+
+    buflog.Println("hello")
+
+    fmt.Print("from buflog:", buf.String())
+
+    jsonHandler := slog.NewJSONHandler(os.Stderr, nil)
+    myslog := slog.New(jsonHandler)
+    myslog.Info("hi there")
+
+    myslog.Info("hello again", "key", "val", "age", 25)
 }
